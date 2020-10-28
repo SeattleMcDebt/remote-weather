@@ -5,7 +5,7 @@ jobs:
     docker:
       - image: node:14.15.0-alpine3.10
     resource_class: small
-    working_directory: ~/ui
+    working_directory: ~remote-weather/ui
     steps:
       - checkout
       - run: npm install
