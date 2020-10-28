@@ -3,7 +3,7 @@ version: 2.1
 orbs:
   node: circleci/node@4.1.0
 jobs:
-  test:
+  test-ui:
     executor: node/default
 
     resource_class: small
@@ -20,4 +20,4 @@ jobs:
 workflows:
   test:
     jobs:
-      - test
+      - test-ui
