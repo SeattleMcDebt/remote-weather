@@ -17,7 +17,15 @@ jobs:
       - node/install-packages:
           cache-path: ~/project/ui/node_modules
           override-ci-command: npm install
-      - run: npm run test -- --ci --runInBand --reporters=default --reporters=jest-junit
+      - run: 
+          name: Run tests
+          command: npm run test -- --ci --runInBand --reporters=default --reporters=jest-junit
+          environment:
+              JEST_JUNIT_OUTPUT_DIR: ./reports/junit
+      - store_test_results:
+          path: ./reports/junit
+      - store_artifacts:
+          path: ./reports/junit
 workflows:
   test:
     jobs:
