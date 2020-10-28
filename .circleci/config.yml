@@ -9,7 +9,7 @@ jobs:
     resource_class: small
     working_directory: ~/project/ui
     steps:
-      - checkout
+      - checkout:
           path: ~/project
       - run: ls
       - run: pwd
