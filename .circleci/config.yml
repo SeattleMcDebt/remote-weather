@@ -11,12 +11,13 @@ jobs:
     steps:
       - checkout:
           path: ~/project
-      - run: ls
-      - run: pwd
+      - run:
+          name: Install JUnit coverage reporter
+          command: npm install --dev jest-junit
       - node/install-packages:
           cache-path: ~/project/ui/node_modules
           override-ci-command: npm install
-      - run: npm run test
+      - run: npm run test -- --ci --runInBand --reporters=default --reporters=jest-junit
 workflows:
   test:
     jobs:
