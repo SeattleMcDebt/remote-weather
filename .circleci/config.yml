@@ -10,6 +10,7 @@ jobs:
     working_directory: ~/project/ui
     steps:
       - checkout
+          path: ~/project
       - run: ls
       - run: pwd
       - node/install-packages:
