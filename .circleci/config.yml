@@ -16,3 +16,7 @@ jobs:
           cache-path: ~/project/ui/node_modules
           override-ci-command: npm install
       - run: npm run test
+workflows:
+  test:
+    jobs:
+      - test
