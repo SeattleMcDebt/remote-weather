@@ -11,13 +11,31 @@ jobs:
     steps:
       - checkout:
           path: ~/project
+      - restore_cache:
+          keys:
+            - dependencies-{{ checksum "package.json " }}
+            - dependencies-
       - run:
           name: Install JUnit coverage reporter
           command: npm install --dev jest-junit
       - node/install-packages:
           cache-path: ~/project/ui/node_modules
           override-ci-command: npm install
-      - run: 
+      - save_cache:
+          paths:
+            - node_modules
+            - ~/.npm
+            - ~/.cache
+          key: dependencies-{{ checksum "package.json" }}
+      - run:
+          name: Run linter
+          command: npm run lint
+          environment:
+              JEST_JUNIT_OUTPUT_DIR: ./reports/junit
+      - run:
+          name: Run security scan
+          command: npm run scan
+      - run:
           name: Run tests
           command: npm run test -- --ci --runInBand --reporters=default --reporters=jest-junit
           environment:
