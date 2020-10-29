@@ -8,8 +8,9 @@
     "eslint-plugin-prefer-arrow": "^1.2.2"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint *.js"
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "lint": "eslint *.js",
+    "scan": "npm audit"
   },
   "eslintConfig": {
     "plugins": [
