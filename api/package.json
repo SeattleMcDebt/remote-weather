@@ -4,11 +4,12 @@
   "description": "",
   "main": "server.js",
   "devDependencies": {
+    "eslint": "^7.12.1",
     "eslint-plugin-prefer-arrow": "^1.2.2"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint src/**/*.js"
+    "lint": "eslint *.js"
   },
   "eslintConfig": {
     "plugins": [
@@ -36,18 +37,18 @@
       ],
       "prefer-arrow-callback": [
         "error",
-        { "allowNamedFunctions": true }
+        {
+          "allowNamedFunctions": true
+        }
       ],
       "func-style": [
         "error",
         "expression",
-        { "allowArrowFunctions": true }
+        {
+          "allowArrowFunctions": true
+        }
       ]
-    },
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    }
   },
   "prettier": {
     "semi": false,
