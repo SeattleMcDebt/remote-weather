@@ -1,0 +1,58 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "devDependencies": {
+    "eslint-plugin-prefer-arrow": "^1.2.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint src/**/*.js"
+  },
+  "eslintConfig": {
+    "plugins": [
+      "prefer-arrow"
+    ],
+    "rules": {
+      "quotes": [
+        2,
+        "single",
+        {
+          "avoidEscape": true
+        }
+      ],
+      "semi": [
+        "error",
+        "never"
+      ],
+      "prefer-arrow/prefer-arrow-functions": [
+        "error",
+        {
+          "disallowPrototype": true,
+          "singleReturnOnly": false,
+          "classPropertiesAllowed": false
+        }
+      ],
+      "prefer-arrow-callback": [
+        "error",
+        { "allowNamedFunctions": true }
+      ],
+      "func-style": [
+        "error",
+        "expression",
+        { "allowArrowFunctions": true }
+      ]
+    },
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true
+  },
+  "author": "",
+  "license": "ISC"
+}
