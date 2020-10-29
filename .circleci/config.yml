@@ -1,115 +1,95 @@
 version: 2.1
 orbs:
-    node: circleci/node@4.1.0
+  node: circleci/node@4.1.0
 jobs:
-    test-ui:
-        executor: node/default
-        resource_class: small
-        working_directory: ~/project/ui
-        steps:
-            -
-                checkout:
-                    path: ~/project
-            -
-                restore_cache:
-                    keys:
-                        - 'dependencies-{{ checksum "package.json " }}'
-                        - dependencies-
-            -
-                run:
-                    name: Install JUnit coverage reporter
-                    command: npm install --dev jest-junit
-            -
-                node/install-packages:
-                    cache-path: ~/project/ui/node_modules
-                    override-ci-command: npm install
-            -
-                save_cache:
-                    paths:
-                        - node_modules
-                        - ~/.npm
-                        - ~/.cache
-                    key: 'dependencies-{{ checksum "package.json" }}'
-            -
-                run:
-                    name: Run linter
-                    command: npm run lint
-                    environment:
-                        JEST_JUNIT_OUTPUT_DIR: ./reports/junit
-            -
-                run:
-                    name: Run security scan
-                    command: npm run scan
-            -
-                run:
-                    name: Run tests
-                    command: >-
-                        npm run test -- --ci --runInBand --reporters=default
-                        --reporters=jest-junit
-                    environment:
-                        JEST_JUNIT_OUTPUT_DIR: ./reports/junit
-            -
-                store_test_results:
-                    path: ./reports/junit
-            -
-                store_artifacts:
-                    path: ./reports/junit
-    test-api:
-        executor: node/default
-        resource_class: small
-        working_directory: ~/project/api
-        steps:
-            -
-                checkout:
-                    path: ~/project
-            -
-                run:
-                    name: Install JUnit coverage reporter
-                    command: npm install --dev jest-junit
-            -
-                node/install-packages:
-                    cache-path: ~/project/api/node_modules
-                    override-ci-command: npm install
-            -
-                run:
-                    name: Run linter
-                    command: npm run lint
-                    environment:
-                        JEST_JUNIT_OUTPUT_DIR: ./reports/junit
-            -
-                run:
-                    name: Run security scan
-                    command: npm run scan
-            -
-                run:
-                    name: Run tests
-                    command: >-
-                        npm run test -- --ci --runInBand --reporters=default
-                        --reporters=jest-junit
-                    environment:
-                        JEST_JUNIT_OUTPUT_DIR: ./reports/junit
-            -
-                store_test_results:
-                    path: ./reports/junit
-            -
-                store_artifacts:
-                    path: ./reports/junit
-    test-hardware:
-        docker:
-            - image: suculent/platformio-docker-build
-        resource_class: small
-        working_directory: ~/project/hardware
-        steps:
-            -
-                checkout:
-                    path: ~/project
-            -
-                run:
-                    name: Compile
-                    command: pio run -e native
+  test-ui:
+    executor: node/default
+    resource_class: small
+    working_directory: ~/project/ui
+    steps:
+      - checkout:
+          path: ~/project
+      - restore_cache:
+          keys:
+            - 'dependencies-{{ checksum "package.json " }}'
+            - dependencies-
+      - run:
+          name: Install JUnit coverage reporter
+          command: npm install --dev jest-junit
+      - node/install-packages:
+          cache-path: ~/project/ui/node_modules
+          override-ci-command: npm install
+      - save_cache:
+          paths:
+            - node_modules
+            - ~/.npm
+            - ~/.cache
+          key: 'dependencies-{{ checksum "package.json" }}'
+      - run:
+          name: Run linter
+          command: npm run lint
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./reports/junit
+      - run:
+          name: Run security scan
+          command: npm run scan
+      - run:
+          name: Run tests
+          command: >-
+            npm run test -- --ci --runInBand --reporters=default
+            --reporters=jest-junit
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./reports/junit
+      - store_test_results:
+          path: ./reports/junit
+      - store_artifacts:
+          path: ./reports/junit
+  test-api:
+    executor: node/default
+    resource_class: small
+    working_directory: ~/project/api
+    steps:
+      - checkout:
+          path: ~/project
+      - run:
+          name: Install JUnit coverage reporter
+          command: npm install --dev jest-junit
+      - node/install-packages:
+          cache-path: ~/project/api/node_modules
+          override-ci-command: npm install
+      - run:
+          name: Run linter
+          command: npm run lint
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./reports/junit
+      - run:
+          name: Run security scan
+          command: npm run scan
+      - run:
+          name: Run tests
+          command: >-
+            npm run test -- --ci --runInBand --reporters=default
+            --reporters=jest-junit
+          environment:
+            JEST_JUNIT_OUTPUT_DIR: ./reports/junit
+      - store_test_results:
+          path: ./reports/junit
+      - store_artifacts:
+          path: ./reports/junit
+  test-hardware:
+    docker:
+      - image: suculent/platformio-docker-build
+    resource_class: small
+    working_directory: ~/project/hardware
+    steps:
+      - checkout:
+          path: ~/project
+      - run:
+          name: Compile
+          command: pio run
 workflows:
-    test:
-        jobs:
-            - test-ui
-            - test-api
-            - test-hardware
+  test:
+    jobs:
+      - test-ui
+      - test-api
+      - test-hardware
