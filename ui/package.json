@@ -20,10 +20,47 @@
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
+    "plugins": [
+      "prefer-arrow"
+    ],
+    "rules": {
+      "quotes": [
+        2,
+        "single",
+        {
+          "avoidEscape": true
+        }
+      ],
+      "semi": [
+        "error",
+        "never"
+      ],
+      "prefer-arrow/prefer-arrow-functions": [
+        "error",
+        {
+          "disallowPrototype": true,
+          "singleReturnOnly": false,
+          "classPropertiesAllowed": false
+        }
+      ],
+      "prefer-arrow-callback": [
+        "error",
+        { "allowNamedFunctions": true }
+      ],
+      "func-style": [
+        "error",
+        "expression",
+        { "allowArrowFunctions": true }
+      ]
+    },
     "extends": [
       "react-app",
       "react-app/jest"
     ]
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true
   },
   "browserslist": {
     "production": [
@@ -36,5 +73,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "eslint-plugin-prefer-arrow": "^1.2.2"
   }
 }
