@@ -75,9 +75,16 @@ jobs:
           path: ./reports/junit
       - store_artifacts:
           path: ./reports/junit
-
+    test-hardware:
+        override:
+            - pio run
+            - pio test
 workflows:
   test:
     jobs:
       - test-ui
       - test-api
+      - test-hardware:
+            pre-steps:
+                - run:
+                    command: sudo pip install -U platformio
