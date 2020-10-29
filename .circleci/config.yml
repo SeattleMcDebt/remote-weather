@@ -77,8 +77,6 @@ jobs:
       - store_artifacts:
           path: ./reports/junit
   test-hardware:
-    docker:
-      - image: suculent/platformio-docker-build
     resource_class: small
     machine:
       docker_layer_caching: true
@@ -86,6 +84,9 @@ jobs:
     steps:
       - checkout:
           path: ~/project
+      - run:
+          name: Build Platformio docker image
+          command: docker build -t suculent/platformio-docker-build .
       - run:
           name: Compile
           command: pio run
