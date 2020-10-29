@@ -95,7 +95,8 @@ jobs:
                 store_artifacts:
                     path: ./reports/junit
     test-hardware:
-        executor: 
+        docker:
+            - image: suculent/platformio-docker-build
         resource_class: small
         working_directory: ~/project/hardware
         steps:
@@ -111,9 +112,4 @@ workflows:
         jobs:
             - test-ui
             - test-api
-            -
-                test-hardware:
-                    pre-steps:
-                        -
-                            run:
-                                command: sudo pip install -U platformio
+            - test-hardware
