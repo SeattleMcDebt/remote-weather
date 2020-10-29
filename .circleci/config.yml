@@ -98,9 +98,14 @@ jobs:
         executor: 
         resource_class: small
         working_directory: ~/project/hardware
-        override:
-            - pio run -e native
-
+        steps:
+            -
+                checkout:
+                    path: ~/project
+            -
+                run:
+                    name: Compile
+                    command: pio run -e native
 workflows:
     test:
         jobs:
