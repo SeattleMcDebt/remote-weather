@@ -1,32 +1,31 @@
 #include <lmic.h>
 #include <hal/hal.h>
+#include <Wire.h>
 #include <SPI.h>
+#include <Adafruit_Sensor.h>
+#include "Adafruit_BME680.h"
+#include "Adafruit_PM25AQI.h"
 
 #define VBATPIN A7
 
-// This EUI must be in little-endian format, so least-significant-byte
-// first. When copying an EUI from ttnctl output, this means to reverse
-// the bytes. For TTN issued EUIs the last bytes should be 0xD5, 0xB3,
-// 0x70.
-static const u1_t PROGMEM APPEUI[8] = {};
-void os_getArtEui(u1_t *buf) { memcpy_P(buf, APPEUI, 8); }
+/*** BME SETUP ***/
+#define BME_SCK 13
+#define BME_MISO 12
+#define BME_MOSI 11
+#define BME_CS 10
 
-// This should also be in little endian format, see above.
-static const u1_t PROGMEM DEVEUI[8] = {};
-void os_getDevEui(u1_t *buf) { memcpy_P(buf, DEVEUI, 8); }
+#define SEALEVELPRESSURE_HPA (1013.25)
 
-// This key should be in big endian format (or, since it is not really a
-// number but a block of memory, endianness does not really apply). In
-// practice, a key taken from the TTN console can be copied as-is.
-static const u1_t PROGMEM APPKEY[16] = {};
-void os_getDevKey(u1_t *buf) { memcpy_P(buf, APPKEY, 16); }
+/** Initialize sensors **/
+Adafruit_PM25AQI aqi = Adafruit_PM25AQI();
+Adafruit_BME680 bme;
 
-static uint8_t payload[3];
+static uint8_t payload[26];
 static osjob_t sendjob;
 
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
-const unsigned TX_INTERVAL = 300;
+const unsigned TX_INTERVAL = 60;
 
 // Pin mapping for Adafruit Feather M0 LoRa, etc.
 const lmic_pinmap lmic_pins = {
@@ -183,6 +182,78 @@ void do_send(osjob_t *j)
     }
     else
     {
+        PM25_AQI_Data data;
+        delay(1000);
+        Serial.println();
+        Serial.println(F("---------------------------------------"));
+        Serial.println(F("Concentration Units (standard)"));
+        Serial.println(F("---------------------------------------"));
+        Serial.print(F("PM 1.0: "));
+        Serial.print(data.pm10_standard);
+        Serial.print(F("\t\tPM 2.5: "));
+        Serial.print(data.pm25_standard);
+        Serial.print(F("\t\tPM 10: "));
+        Serial.println(data.pm100_standard);
+        Serial.println(F("Concentration Units (environmental)"));
+        Serial.println(F("---------------------------------------"));
+        Serial.print(F("PM 1.0: "));
+        Serial.print(data.pm10_env);
+        Serial.print(F("\t\tPM 2.5: "));
+        Serial.print(data.pm25_env);
+        Serial.print(F("\t\tPM 10: "));
+        Serial.println(data.pm100_env);
+        Serial.println(F("---------------------------------------"));
+        Serial.print(F("Particles > 0.3um / 0.1L air:"));
+        Serial.println(data.particles_03um);
+        Serial.print(F("Particles > 0.5um / 0.1L air:"));
+        Serial.println(data.particles_05um);
+        Serial.print(F("Particles > 1.0um / 0.1L air:"));
+        Serial.println(data.particles_10um);
+        Serial.print(F("Particles > 2.5um / 0.1L air:"));
+        Serial.println(data.particles_25um);
+        Serial.print(F("Particles > 5.0um / 0.1L air:"));
+        Serial.println(data.particles_50um);
+        Serial.print(F("Particles > 10 um / 0.1L air:"));
+        Serial.println(data.particles_100um);
+        Serial.println(F("---------------------------------------"));
+
+        Serial.print("Temperature = ");
+        Serial.print(bme.temperature);
+        Serial.println(" *C");
+
+        Serial.print("Pressure = ");
+        Serial.print(bme.pressure / 100.0);
+        Serial.println(" hPa");
+
+        Serial.print("Humidity = ");
+        Serial.print(bme.humidity);
+        Serial.println(" %");
+
+        Serial.print("Gas = ");
+        Serial.print(bme.gas_resistance / 1000.0);
+        Serial.println(" KOhms");
+
+        Serial.print("Approx. Altitude = ");
+        Serial.print(bme.readAltitude(SEALEVELPRESSURE_HPA));
+        Serial.println(" m");
+        uint8_t pm10_standard = data.pm10_standard;
+        uint8_t pm25_standard = data.pm25_standard;
+        uint8_t pm100_standard = data.pm100_standard;
+        uint8_t pm10_env = data.pm10_env;
+        uint8_t pm25_env = data.pm25_env;
+        uint8_t pm100_env = data.pm100_env;
+        uint16_t pm03 = data.particles_03um;
+        uint16_t pm05 = data.particles_05um;
+        uint16_t pm10 = data.particles_10um;
+        uint16_t pm25 = data.particles_25um;
+        uint16_t pm50 = data.particles_50um;
+        uint16_t pm100 = data.particles_100um;
+
+        uint16_t temperature = bme.temperature * 100;
+        uint16_t pressure = (bme.pressure / 100.0) * 10;
+        uint16_t humidity = bme.humidity * 100;
+        // uint32_t gas = bme.gas_resistance / 1000.0;
+
         uint16_t measuredvbat = analogRead(VBATPIN);
         // measuredvbat *= 2;    // we divided by 2, so multiply back
         // measuredvbat *= 3.3;  // Multiply by 3.3V, our reference voltage
@@ -190,11 +261,34 @@ void do_send(osjob_t *j)
         Serial.print("Battery: ");
         Serial.println(measuredvbat);
 
-        // int -> bytes
-        byte vltLow = measuredvbat & 0xff;
-        byte vltHigh = measuredvbat >> 8;
-        payload[0] = vltLow;
-        payload[1] = vltHigh;
+        // push the data onto the payload
+        // i know this is ugly... i'll change it later after testing
+        payload[0] = pm10_standard;
+        payload[1] = pm25_standard;
+        payload[2] = pm100_standard;
+        payload[3] = pm10_env;
+        payload[4] = pm25_env;
+        payload[5] = pm100_env;
+        payload[6] = pm03 & 0xff;
+        payload[7] = pm03 >> 8;
+        payload[8] = pm05 & 0xff;
+        payload[9] = pm05 >> 8;
+        payload[10] = pm10 & 0xff;
+        payload[11] = pm10 >> 8;
+        payload[12] = pm25 & 0xff;
+        payload[13] = pm25 >> 8;
+        payload[14] = pm50 & 0xff;
+        payload[15] = pm50 >> 8;
+        payload[16] = pm100 && 0xff;
+        payload[17] = pm100 >> 8;
+        payload[18] = temperature & 0xff;
+        payload[19] = temperature >> 8;
+        payload[20] = pressure & 0xff;
+        payload[21] = pressure >> 8;
+        payload[22] = humidity & 0xff;
+        payload[23] = humidity >> 8;
+        payload[24] = measuredvbat & 0xff;
+        payload[25] = measuredvbat >> 8;
 
         // Prepare upstream data transmission at the next possible time.
         LMIC_setTxData2(1, payload, sizeof(payload) - 1, 0);
@@ -204,7 +298,40 @@ void do_send(osjob_t *j)
 
 void setup()
 {
-    Serial.begin(9600);
+
+    Serial.begin(115200);
+    while (!Serial)
+        delay(10);
+
+    Serial.println("Adafruit PMSA003I Air Quality Sensor");
+
+    // Wait one second for sensor to boot up!
+    delay(1000);
+
+    // There are 3 options for connectivity!
+    if (!aqi.begin_I2C())
+    { // connect to the sensor over I2C
+        //if (! aqi.begin_UART(&Serial1)) { // connect to the sensor over hardware serial
+        //if (! aqi.begin_UART(&pmSerial)) { // connect to the sensor over software serial
+        Serial.println("Could not find PM 2.5 sensor!");
+        while (1)
+            delay(10);
+    }
+
+    if (!bme.begin())
+    {
+        Serial.println("Could not find a valid BME680 sensor, check wiring!");
+        while (1)
+            ;
+    }
+
+    // Set up oversampling and filter initialization
+    bme.setTemperatureOversampling(BME680_OS_8X);
+    bme.setHumidityOversampling(BME680_OS_2X);
+    bme.setPressureOversampling(BME680_OS_4X);
+    bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
+    bme.setGasHeater(320, 150); // 320*C for 150 ms
+
     Serial.println(F("Starting"));
     pinMode(VBATPIN, INPUT);
     // LMIC init
@@ -216,6 +343,8 @@ void setup()
     LMIC_setAdrMode(false);
     LMIC_setDrTxpow(DR_SF12CR, 23);
     LMIC_selectSubBand(1);
+
+    delay(5000);
 
     // Start job (sending automatically starts OTAA too)
     do_send(&sendjob);
